@@ -1,4 +1,4 @@
-```javascript
+
 (function () {
   const API_URL = "http://localhost:4000/api/events";
   const STORAGE_KEY = "user_analytics_session_id";
@@ -45,4 +45,3 @@
     });
   });
 })();
-```
