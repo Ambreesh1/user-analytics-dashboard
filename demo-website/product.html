@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopEase | Products</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="tracker.js"></script>
+</head>
+<body>
+  <header>
+    <h1>ShopEase</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="product.html">Products</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+
+  <main class="content">
+    <h2>Our Products</h2>
+    <p>Click a product button to generate analytics events.</p>
+
+    <section class="products">
+      <article class="product-card">
+        <div class="product-image">🎧</div>
+        <h3>Wireless Headphones</h3>
+        <p>₹1,499</p>
+        <button type="button">Add to Cart</button>
+      </article>
+
+      <article class="product-card">
+        <div class="product-image">⌚</div>
+        <h3>Classic Watch</h3>
+        <p>₹1,999</p>
+        <button type="button">Add to Cart</button>
+      </article>
+
+      <article class="product-card">
+        <div class="product-image">🎒</div>
+        <h3>Everyday Backpack</h3>
+        <p>₹999</p>
+        <button type="button">Add to Cart</button>
+      </article>
+    </section>
+
+    <p id="message" aria-live="polite"></p>
+  </main>
+
+  <footer>ShopEase Demo Store</footer>
+
+  <script>
+    document.querySelectorAll(".product-card button").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("message").textContent =
+          button.closest(".product-card").querySelector("h3").textContent +
+          " selected!";
+      });
+    });
+  </script>
+</body>
+</html>

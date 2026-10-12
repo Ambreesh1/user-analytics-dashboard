@@ -9,7 +9,7 @@ import EventModel from './models/Event'
 dotenv.config()
 
 // Local DNS workaround that fixed the MongoDB connection on this PC.
-setServers(['8.8.8.8'])
+setServers(['10.68.123.85'])
 
 const app = express()
 const PORT = Number(process.env.PORT) || 4000
@@ -33,8 +33,16 @@ app.get('/api/health', (_req, res) => {
 // 2. Store a page_view or click event.
 app.post('/api/events', async (req, res) => {
   try {
-    const { sessionId, eventType, pageUrl, timestamp, x, y } =
-      req.body ?? {}
+    const {
+           sessionId,
+           eventType,
+            pageUrl,
+          timestamp,
+          x,
+          y,
+         viewportWidth,
+         viewportHeight,
+} = req.body ?? {}
 
     if (
       typeof sessionId !== 'string' ||
@@ -115,6 +123,8 @@ app.post('/api/events', async (req, res) => {
       ...(timestamp ? { timestamp: new Date(timestamp) } : {}),
       ...(x !== undefined ? { x } : {}),
       ...(y !== undefined ? { y } : {}),
+      ...(viewportWidth !== undefined ? { viewportWidth } : {}),
+      ...(viewportHeight !== undefined ? { viewportHeight } : {}),
     })
 
     return res.status(201).json({
@@ -221,7 +231,7 @@ app.get('/api/events/clicks', async (req, res) => {
       x: { $exists: true },
       y: { $exists: true },
     })
-      .select('sessionId pageUrl timestamp x y')
+      .select('sessionId pageUrl timestamp x y viewportWidth viewportHeight')
       .sort({ timestamp: 1 })
       .lean()
 

@@ -33,6 +33,14 @@ const eventSchema = new Schema(
       type: Number,
       min: 0,
     },
+    viewportWidth: {
+  type: Number,
+  min: 1,
+},
+viewportHeight: {
+  type: Number,
+  min: 1,
+},
   },
   { timestamps: true },
 )

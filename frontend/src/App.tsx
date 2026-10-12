@@ -18,6 +18,8 @@ import './App.css'
 const API_URL = 'http://localhost:4000/api'
 
 type AnalyticsEvent = {
+  
+  
   _id: string
   sessionId: string
   eventType: 'page_view' | 'click'
@@ -26,6 +28,23 @@ type AnalyticsEvent = {
   x?: number
   y?: number
 }
+type HeatmapClick = {
+  sessionId: string
+  pageUrl: string
+  timestamp: string
+  x: number
+  y: number
+   viewportWidth?: number
+   viewportHeight?: number
+}
+
+type ClicksResponse = {
+  success: boolean
+  pageUrl: string
+  count: number
+  clicks: HeatmapClick[]
+}
+
 
 type Session = {
   sessionId: string
@@ -88,7 +107,25 @@ function formatDuration(start: string, end: string) {
 function eventLabel(eventType: AnalyticsEvent['eventType']) {
   return eventType === 'page_view' ? 'Page viewed' : 'Click recorded'
 }
+function normalizePageUrl(pageUrl: string) {
+  const path = pageUrl.split('?')[0]
 
+  if (path === '/' || path === '/index.html') {
+    return '/'
+  }
+
+  return path
+}
+
+function getPageLabel(pageUrl: string) {
+  const path = normalizePageUrl(pageUrl)
+
+  if (path === '/') return 'Home'
+  if (path.endsWith('/product.html')) return 'Products'
+  if (path.endsWith('/about.html')) return 'About'
+
+  return path
+}
 function App() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [allEvents, setAllEvents] = useState<AnalyticsEvent[]>([])
@@ -97,6 +134,32 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [timelineLoading, setTimelineLoading] = useState(false)
   const [error, setError] = useState('')
+  const [heatmapPage, setHeatmapPage] = useState('')
+  const [heatmapClicks, setHeatmapClicks] = useState<HeatmapClick[]>([])
+  const [heatmapLoading, setHeatmapLoading] = useState(false)
+  const [heatmapError, setHeatmapError] = useState('')
+  const heatmapPreviewUrls: Record<string, string> = {
+  "/": "http://localhost:5500/",
+  "/index.html": "http://localhost:5500/index.html",
+  "/product.html": "http://localhost:5500/product.html",
+  "/about.html": "http://localhost:5500/about.html",
+}
+
+const heatmapPages = useMemo(
+  () =>
+    Array.from(
+      new Set(
+        allEvents
+          .filter((event) => event.eventType === 'click')
+          .map((event) => normalizePageUrl(event.pageUrl)),
+      ),
+    ),
+  [allEvents],
+)
+
+    
+  
+  
 
   const loadAnalytics = useCallback(async () => {
     try {
@@ -149,7 +212,6 @@ function App() {
       setLoading(false)
     }
   }, [])
-
   useEffect(() => {
     void loadAnalytics()
   }, [loadAnalytics])
@@ -203,7 +265,59 @@ function App() {
       cancelled = true
     }
   }, [selectedSessionId])
+useEffect(() => {
+  if (!heatmapPages.length) {
+    setHeatmapPage('')
+    setHeatmapClicks([])
+    return
+  }
 
+  if (!heatmapPages.includes(heatmapPage)) {
+    setHeatmapPage(heatmapPages[0])
+  }
+}, [heatmapPages, heatmapPage])
+
+useEffect(() => {
+  if (!heatmapPage) {
+    setHeatmapClicks([])
+    return
+  }
+
+  const controller = new AbortController()
+
+  async function loadHeatmap() {
+    try {
+      setHeatmapLoading(true)
+      setHeatmapError('')
+
+      const response = await fetch(
+        `${API_URL}/events/clicks?pageUrl=${encodeURIComponent(heatmapPage)}`,
+        { signal: controller.signal },
+      )
+
+      if (!response.ok) {
+        throw new Error('Could not load click coordinates.')
+      }
+
+      const data: ClicksResponse = await response.json()
+      setHeatmapClicks(data.clicks ?? [])
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return
+
+      setHeatmapError(
+        err instanceof Error ? err.message : 'Could not load heatmap.',
+      )
+    } finally {
+      if (!controller.signal.aborted) {
+        setHeatmapLoading(false)
+      }
+    }
+  }
+
+  void loadHeatmap()
+
+  return () => controller.abort()
+}, [heatmapPage])
   const selectedSession =
     sessions.find((session) => session.sessionId === selectedSessionId) ?? null
 
@@ -237,7 +351,8 @@ function App() {
     allEvents
       .filter((event) => event.eventType === 'click')
       .forEach((event) => {
-        counts.set(event.pageUrl, (counts.get(event.pageUrl) ?? 0) + 1)
+        const page = normalizePageUrl(event.pageUrl)
+        counts.set(page, (counts.get(page) ?? 0) + 1)
       })
 
     return Array.from(counts, ([page, clicks]) => ({ page, clicks })).sort(
@@ -360,6 +475,7 @@ function App() {
                   />
                   <XAxis
                     dataKey="page"
+                    tickFormatter={(value) => getPageLabel(value)}
                     tick={{ fill: '#8991a5', fontSize: 11 }}
                     tickLine={false}
                     axisLine={{ stroke: '#edf0f6' }}
@@ -370,7 +486,9 @@ function App() {
                     tickLine={false}
                     axisLine={false}
                   />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip contentStyle={tooltipStyle}
+                    formatter={(value) => [value, 'Clicks']}
+                    labelFormatter={(label) => getPageLabel(String(label))}/>
                   <Bar
                     dataKey="clicks"
                     name="Clicks"
@@ -469,6 +587,100 @@ function App() {
           )}
         </article>
       </section>
+      
+<section className="panel heatmap-panel">
+  <div className="section-heading">
+    <div>
+      <h2>Click heatmap</h2>
+      <p>Explore where visitors clicked on each tracked page.</p>
+    </div>
+
+    <span className="section-meta">
+      {heatmapClicks.length} clicks
+    </span>
+  </div>
+
+  <label className="heatmap-label" htmlFor="heatmap-page">
+    Select page
+  </label>
+
+  <select
+    id="heatmap-page"
+    className="heatmap-select"
+    value={heatmapPage}
+    onChange={(event) => setHeatmapPage(event.target.value)}
+    disabled={!heatmapPages.length || heatmapLoading}
+  >
+    {heatmapPages.map((page) => (
+      <option key={page} value={page}>
+        {getPageLabel(page)}
+      </option>
+    ))}
+  </select>
+
+  {heatmapError ? (
+    <div className="empty-state" role="alert">
+      {heatmapError}
+    </div>
+  ) : heatmapLoading ? (
+    <div className="empty-state">Loading click positions...</div>
+  ) : heatmapClicks.length > 0 ? (
+    <>
+      <div className="heatmap-preview">
+  <div className="heatmap-preview-header">
+    <span>Page preview</span>
+    <span>{getPageLabel(heatmapPage)}</span>
+  </div>
+
+  <div className="heatmap-preview-frame">
+    <iframe
+      key={heatmapPage}
+      src={heatmapPreviewUrls[heatmapPage] ?? "http://localhost:5500/"}
+      title={`Preview of ${getPageLabel(heatmapPage)}`}
+      className="heatmap-iframe"
+    />
+
+    <div className="heatmap-coordinate-plane">
+      <div className="heatmap-grid-lines" />
+
+       
+{heatmapClicks.map((click, index) => {
+  const width = Math.max(1, click.viewportWidth ?? 1280)
+  const height = Math.max(1, click.viewportHeight ?? 720)
+
+  const left = Math.min(100, Math.max(0, (click.x / width) * 100))
+  const top = Math.min(100, Math.max(0, (click.y / height) * 100))
+
+  return (
+    <span
+      key={`${click.sessionId}-${click.timestamp}-${index}`}
+      className="heatmap-hotspot"
+      style={{
+        left: `${left}%`,
+        top: `${top}%`,
+      }}
+      title={`Click ${index + 1}: x=${click.x}, y=${click.y}`}
+    />
+  )
+})}
+      </div>
+    </div>
+  </div>
+
+  <p className="info-note">
+    Each dot represents a recorded click. Positions are scaled relative
+    to the recorded coordinates, not an exact webpage screenshot.
+  </p>
+</>
+) : (
+
+    <div className="empty-state">
+      No click coordinates found for this page. Visit the demo website
+      and click somewhere to collect data.
+    </div>
+  )}
+</section>
+
 
       <section className="panel sessions-panel">
         <div className="section-heading">
@@ -502,7 +714,9 @@ function App() {
                     {session.sessionId.slice(0, 1).toUpperCase()}
                   </span>
                   <span>
-                    <span className="session-name">{session.sessionId}</span>
+                    <span className="session-name">
+                      Visitor {sessions.length - sessions.indexOf(session)}
+                  </span>
                     <span className="session-subtitle">
                       First seen {formatTime(session.firstEventAt)}
                     </span>
@@ -571,7 +785,7 @@ function App() {
                   <div className="event-content">
                     <h3>{eventLabel(event.eventType)}</h3>
                     <p>
-                      <span className="event-page">{event.pageUrl}</span>
+                      <span className="event-page">{getPageLabel(event.pageUrl)}</span>
                       <span>{formatTime(event.timestamp)}</span>
                     </p>
 
@@ -609,7 +823,7 @@ function App() {
             <div className="coordinate-list">
               {recentClicks.map((event) => (
                 <div className="coordinate-item" key={event._id}>
-                  <span className="coordinate-page">{event.pageUrl}</span>
+                  <span className="coordinate-page">{getPageLabel(event.pageUrl)}</span>
                   <span className="coordinate-values">
                     <span>X: {event.x}</span>
                     <span>Y: {event.y}</span>
