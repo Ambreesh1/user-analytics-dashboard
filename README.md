@@ -228,14 +228,37 @@ npm run build
 
 The production frontend build may display a bundle-size warning. This does not necessarily indicate a failed build.
 
-## Future Improvements
+  ## Assumptions
 
-- Date-range filters and historical analytics
-- Device and browser breakdowns
-- Conversion and funnel tracking
-- Exportable analytics reports
-- More efficient event aggregation
-- Automated testing and monitoring
+The following assumptions guided the implementation of the User Analytics Dashboard:
+
+- **Session identification:** A browser session is identified using a session ID stored in `sessionStorage`. This helps associate events within the same browser tab session without requiring user registration.
+- **Event scope:** Page views and click events are sufficient to demonstrate the core analytics workflow for this project.
+- **Demo traffic:** The included demo website acts as a controlled environment for generating events and validating dashboard functionality.
+- **Click coordinates:** Click positions are collected along with viewport dimensions and scroll offsets to support heatmap visualization. These coordinates represent recorded interactions, not an exact reconstruction of the original page.
+- **Near-real-time updates:** Analytics data is retrieved from the backend when the dashboard loads or the user refreshes the data. Continuous real-time streaming is not assumed.
+- **Privacy and identity:** The system focuses on anonymous interaction events rather than collecting personally identifiable information or tracking authenticated user identities.
+
+## Trade-offs and Design Decisions
+
+| Decision | Trade-off |
+|---|---|
+| `sessionStorage` for session IDs | Simple browser-based session tracking, but the ID is not shared across separate tabs and does not provide persistent user identity. |
+| Client-side event tracking | Easy to integrate into a website, but events may be missed if JavaScript fails, the network is unavailable, or the request is blocked. |
+| Express API with MongoDB Atlas | Provides a straightforward way to ingest and store analytics events, but a production-scale system may require additional indexing, aggregation, and retention strategies. |
+| React, Vite, and Recharts | Enables a lightweight dashboard with interactive charts, but advanced analytics and complex visualizations require additional implementation. |
+| Viewport-based click heatmap | Simple to implement and useful for demonstrating interaction patterns, but it does not guarantee pixel-perfect alignment across different screen sizes, scroll positions, or page layouts. |
+| Separate frontend, backend, and demo deployments | Allows each component to be deployed independently, but introduces configuration, CORS, and service-availability dependencies. |
+| Manual refresh for updated analytics | Keeps the initial implementation simple and avoids continuous polling, but the dashboard does not automatically display every newly recorded event. |
+
+## Limitations and Future Improvements
+
+- Add configurable date ranges and more advanced analytics filters.
+- Introduce automatic refresh or WebSocket-based updates.
+- Improve heatmap accuracy by normalizing coordinates and accounting for page layout, viewport size, and scroll position.
+- Add event batching, retry handling, and stronger ingestion validation.
+- Introduce authentication, rate limiting, and appropriate data-retention controls before production use.
+- Evaluate database indexing and aggregation strategies as event volume grows.
 
 ## Author
 
