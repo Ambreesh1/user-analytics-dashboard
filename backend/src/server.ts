@@ -3,13 +3,13 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
-import { setServers } from 'node:dns'
+
 import EventModel from './models/Event'
 
 dotenv.config()
 
-// Local DNS workaround that fixed the MongoDB connection on this PC.
-setServers(['10.68.123.85'])
+
+
 
 const app = express()
 const PORT = Number(process.env.PORT) || 4000
