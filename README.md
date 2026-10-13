@@ -61,10 +61,10 @@ The application is deployed with Vercel, Render, and MongoDB Atlas.
 - Render — backend API and demo website
 - GitHub — source control and deployment integration
 
+
 ## Architecture
 
-
-
+```mermaid
 flowchart TD
     A["Visitor"] --> B["Demo Website"]
     B --> C["JavaScript Tracking Script"]
@@ -73,6 +73,7 @@ flowchart TD
     E --> F["Analytics API"]
     F --> G["React Dashboard"]
     G --> H["Charts and Click Heatmap"]
+```
 
 
 
@@ -227,6 +228,206 @@ npm run build
 ```
 
 The production frontend build may display a bundle-size warning. This does not necessarily indicate a failed build.
+
+
+## API Documentation
+
+Base URL: `https://user-analytics-dashboard-4xv1.onrender.com`
+
+All API endpoints below use the `/api` prefix.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/health` | Checks API and database status |
+| POST | `/api/events` | Validates and stores an analytics event |
+| GET | `/api/sessions` | Returns sessions with event counts and timestamps |
+| GET | `/api/sessions/:id/events` | Returns a session's events in chronological order |
+| GET | `/api/events/clicks?pageUrl=...` | Returns click coordinates for a specific page |
+
+### 1. Health Check
+
+**Request**
+
+```http
+GET /api/health
+```
+
+**Example response**
+
+```json
+{
+  "success": true,
+  "message": "User Analytics API is running",
+  "database": "connected"
+}
+```
+
+### 2. Record an Event
+
+**Request**
+
+```http
+POST /api/events
+Content-Type: application/json
+```
+
+Example request body for a page view:
+
+```json
+{
+  "sessionId": "example-session-123",
+  "eventType": "page_view",
+  "pageUrl": "/",
+  "timestamp": "2026-10-13T10:00:00.000Z"
+}
+```
+
+Example request body for a click:
+
+```json
+{
+  "sessionId": "example-session-123",
+  "eventType": "click",
+  "pageUrl": "/product.html",
+  "timestamp": "2026-10-13T10:01:00.000Z",
+  "x": 240,
+  "y": 180,
+  "viewportWidth": 1366,
+  "viewportHeight": 768
+}
+```
+
+**Successful response — HTTP 201**
+
+```json
+{
+  "success": true,
+  "message": "Event stored successfully",
+  "event": {
+    "_id": "<generated-event-id>",
+    "sessionId": "example-session-123",
+    "eventType": "page_view",
+    "pageUrl": "/",
+    "timestamp": "2026-10-13T10:00:00.000Z"
+  }
+}
+```
+
+The `event` object includes the fields stored by Mongoose, including generated document metadata. The example above is abbreviated for readability.
+
+Invalid payloads return HTTP 400 with an error message. A database or server failure returns HTTP 500.
+
+### 3. List Sessions
+
+**Request**
+
+```http
+GET /api/sessions
+```
+
+**Example response**
+
+```json
+{
+  "success": true,
+  "count": 1,
+  "sessions": [
+    {
+      "sessionId": "example-session-123",
+      "totalEvents": 5,
+      "firstEventAt": "2026-10-13T10:00:00.000Z",
+      "lastEventAt": "2026-10-13T10:05:00.000Z"
+    }
+  ]
+}
+```
+
+### 4. Fetch a Session Timeline
+
+**Request**
+
+```http
+GET /api/sessions/example-session-123/events
+```
+
+Returns the session's events in ascending timestamp order.
+
+The response contains `success`, `sessionId`, `count`, and an `events` array. If no events exist for the requested session, the API returns HTTP 404.
+
+### 5. Fetch Click Coordinates
+
+**Request**
+
+```http
+GET /api/events/clicks?pageUrl=%2Fproduct.html
+```
+
+**Example response**
+
+```json
+{
+  "success": true,
+  "pageUrl": "/product.html",
+  "count": 1,
+  "clicks": [
+    {
+      "sessionId": "example-session-123",
+      "pageUrl": "/product.html",
+      "x": 240,
+      "y": 180,
+      "viewportWidth": 1366,
+      "viewportHeight": 768
+    }
+  ]
+}
+```
+
+The endpoint requires a non-empty `pageUrl` query parameter. Returned click records include available coordinate, viewport, session, and timestamp fields.
+
+---
+
+
+## MongoDB Data Model
+
+The backend uses Mongoose to store analytics events. Each document represents a tracked interaction.
+
+| Field | Type | Purpose |
+|---|---|---|
+| `sessionId` | String | Identifies the browser session |
+| `eventType` | String | Identifies the event, such as `page_view` or `click` |
+| `pageUrl` | String | Records the page where the event occurred |
+| `timestamp` | Date | Records when the event occurred |
+| `x` | Number | Horizontal click coordinate, when applicable |
+| `y` | Number | Vertical click coordinate, when applicable |
+
+Session analytics are derived by grouping events by `sessionId`. Click analytics filter click events and use their recorded coordinates.
+
+The exact validation rules, optional fields, timestamps, and database indexes are defined by the Mongoose model.
+
+
+### Indexes
+
+The schema defines two compound indexes:
+
+- `{ sessionId: 1, timestamp: 1 }` — supports queries that retrieve events for a session in chronological order.
+- `{ eventType: 1, pageUrl: 1 }` — supports filtering events by type and page, including click analytics.
+
+### Data Flow
+
+1. The tracking script generates a session ID and captures page-view or click events.
+2. The frontend tracking script sends the event to `POST /api/events`.
+3. The Express backend validates the payload and stores it using Mongoose.
+4. The dashboard retrieves session summaries and click coordinates through the analytics endpoints.
+5. React components visualize the resulting metrics and heatmap.
+
+---
+
+## Demo Video
+
+A short walkthrough demonstrates the deployed application, event collection, analytics dashboard, and click heatmap.
+
+**Video:** https://drive.google.com/file/d/15HflK2kbEeD16nlWPs1K38xXHa6UcuUf/view?usp=drivesdk
+
 
   ## Assumptions
 
