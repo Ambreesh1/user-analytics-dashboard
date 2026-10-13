@@ -63,15 +63,18 @@ The application is deployed with Vercel, Render, and MongoDB Atlas.
 
 ## Architecture
 
-mermaid
+
+
 flowchart TD
-    A[Visitor] --> B[Demo Website]
-    B --> C[JavaScript Tracking Script]
-    C -->|Page Views and Clicks| D[Express API]
-    D --> E[MongoDB Atlas]
-    E --> F[Analytics API Endpoints]
-    F --> G[React Dashboard]
-    G --> H[Charts and Click Heatmap]
+    A["Visitor"] --> B["Demo Website"]
+    B --> C["JavaScript Tracking Script"]
+    C -->|"Page Views and Clicks"| D["Express API"]
+    D --> E[("MongoDB Atlas")]
+    E --> F["Analytics API"]
+    F --> G["React Dashboard"]
+    G --> H["Charts and Click Heatmap"]
+
+
 
 
 ## How It Works
