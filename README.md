@@ -1,16 +1,37 @@
 # User Analytics Dashboard
 
-A full-stack web analytics application that tracks user page views and clicks on a demo website and visualizes the collected activity through an analytics dashboard.
+A full-stack web analytics platform that tracks visitor sessions, page views, and click interactions, then visualizes user activity through an interactive dashboard and click heatmap.
+
+**Live Demo:** [Analytics Dashboard](https://user-analytics-dashboard-bice.vercel.app/) · [Tracked Demo Website](https://user-analytics-demo.onrender.com/) · [Backend API Health](https://user-analytics-dashboard-4xv1.onrender.com/api/health)
+
+---
+
+## Overview
+
+User Analytics Dashboard helps website owners understand how visitors interact with their pages. A lightweight tracking script collects page views and click coordinates from a demo website, the backend stores events in MongoDB, and the dashboard visualizes the collected activity.
+
+The application is deployed with Vercel, Render, and MongoDB Atlas.
 
 ## Features
 
-- **Page View Tracking:** Track page visits across the demo website.
-- **Click Tracking:** Capture click events, including coordinates and page information.
-- **Session Tracking:** Associate user activity with session identifiers.
-- **Analytics Dashboard:** View collected activity and click statistics.
-- **User Journey:** Explore recorded events and page navigation activity.
-- **Click Heatmap:** Visualize click locations on supported demo pages.
-- **Demo Website:** Includes Home, Products, and About pages for testing analytics.
+- **Visitor Session Tracking** — Generates and maintains visitor session IDs.
+- **Page View Analytics** — Records visits to tracked pages.
+- **Click Tracking** — Captures click coordinates and viewport dimensions.
+- **Interactive Dashboard** — Displays sessions, events, page views, and clicks.
+- **Click Activity by Page** — Groups click events by page URL.
+- **Event Distribution** — Visualizes page views versus clicks.
+- **Click Heatmap** — Shows recorded click concentrations on tracked pages.
+- **Demo Website** — Includes Home, Products, and About pages for generating sample analytics events.
+- **Cloud Deployment** — Frontend, backend, and demo website are hosted separately.
+
+## Live Applications
+
+| Component | Technology | Link |
+|---|---|---|
+| Analytics Dashboard | React, Vite, Recharts | [Open Dashboard](https://user-analytics-dashboard-bice.vercel.app/) |
+| Backend API | Node.js, Express, TypeScript | [API Health](https://user-analytics-dashboard-4xv1.onrender.com/api/health) |
+| Demo Website | HTML, CSS, JavaScript | [Open Demo](https://user-analytics-demo.onrender.com/) |
+| Database | MongoDB Atlas | Cloud-hosted database |
 
 ## Tech Stack
 
@@ -19,15 +40,50 @@ A full-stack web analytics application that tracks user page views and clicks on
 - TypeScript
 - Vite
 - Recharts
+- CSS
 
 **Backend**
 - Node.js
-- Express
+- Express.js
 - TypeScript
 - Mongoose
 
 **Database**
 - MongoDB Atlas
+
+**Tracking**
+- JavaScript tracking script
+- Browser Session Storage
+- Fetch API
+
+**Deployment**
+- Vercel — dashboard frontend
+- Render — backend API and demo website
+- GitHub — source control and deployment integration
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Visitor] --> B[Demo Website]
+    B --> C[JavaScript Tracking Script]
+    C -->|Page Views and Clicks| D[Express API]
+    D --> E[MongoDB Atlas]
+    E --> F[Analytics API Endpoints]
+    F --> G[React Dashboard]
+    G --> H[Charts and Click Heatmap]
+```
+
+## How It Works
+
+1. A visitor opens a page on the demo website.
+2. The tracking script creates or retrieves a session ID.
+3. Page views and click interactions are sent to the backend API.
+4. The backend validates and stores analytics events in MongoDB.
+5. The dashboard requests analytics data from the API.
+6. Charts and the heatmap display the recorded activity.
+
+Click coordinates are recorded relative to the browser viewport. Heatmap visualization represents the recorded click distribution and may not exactly reproduce the original webpage layout.
 
 ## Project Structure
 
@@ -35,12 +91,20 @@ A full-stack web analytics application that tracks user page views and clicks on
 user-analytics-dashboard/
 ├── backend/
 │   ├── src/
+│   │   ├── models/
+│   │   └── server.ts
+│   ├── .env.example
 │   ├── package.json
-│   └── .env
+│   └── tsconfig.json
 ├── frontend/
+│   ├── public/
 │   ├── src/
+│   │   ├── assets/
+│   │   ├── App.tsx
+│   │   ├── App.css
+│   │   └── main.tsx
 │   ├── package.json
-│   └── index.html
+│   └── vite.config.ts
 ├── demo-website/
 │   ├── index.html
 │   ├── product.html
@@ -51,22 +115,20 @@ user-analytics-dashboard/
 └── README.md
 ```
 
-## Prerequisites
+## Run Locally
+
+### Prerequisites
 
 - Node.js and npm
-- A MongoDB Atlas cluster, or another compatible MongoDB deployment
+- MongoDB Atlas account or a MongoDB instance
 - Git
-
-## Getting Started
 
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/Ambreesh1/user-analytics-dashboard.git
 cd user-analytics-dashboard
 ```
-
-Replace the repository URL with your actual GitHub repository URL.
 
 ### 2. Configure the backend
 
@@ -75,92 +137,109 @@ cd backend
 npm install
 ```
 
-Create a `.env` file in the `backend` directory and configure the MongoDB connection string using the environment variable expected by `src/server.ts`.
+Create a `.env` file in the `backend` directory:
 
-Keep database credentials and other secrets private. Do not commit `.env` to GitHub.
+```env
+PORT=4000
+MONGODB_URI=your_mongodb_connection_string
+```
 
-### 3. Start the backend
+Replace the placeholder with your own MongoDB connection string. Keep `.env` private and never commit database credentials.
 
-For development:
+Start the backend:
 
 ```bash
 npm run dev
 ```
 
-To compile the backend:
+The backend should be available at `http://localhost:4000`.
 
-```bash
-npm run build
-```
-
-To start the compiled backend:
-
-```bash
-npm start
-```
-
-### 4. Start the frontend
+### 3. Configure the frontend
 
 Open a separate terminal:
 
 ```bash
 cd frontend
 npm install
+```
+
+Create a `.env.local` file inside `frontend`:
+
+```env
+VITE_API_URL=http://localhost:4000/api
+```
+
+Start the frontend:
+
+```bash
 npm run dev
 ```
 
-Open the local URL printed by Vite in your terminal, usually `http://localhost:5173`.
+Open the local URL printed by Vite, usually `http://localhost:5173`.
 
-### 5. Start the demo website
+### 4. Run the demo website
 
-Open another terminal from the project root:
+Open another terminal at the project root and run:
 
 ```bash
 npx http-server demo-website -p 5500
 ```
 
-Open `http://localhost:5500` in your browser.
+Open `http://localhost:5500` and interact with the demo pages to generate analytics events.
 
-Keep the backend, frontend, and demo website servers running in separate terminals.
+If the backend or frontend uses different local settings, update the corresponding environment variables before starting the application.
 
-## Testing the Application
+## Production Environment Variables
 
-1. Open the demo website.
-2. Visit the Home, Products, and About pages.
-3. Click different buttons and page elements.
-4. Open the analytics dashboard.
-5. Verify page views, click counts, session activity, and heatmap data.
+Configure these values in the respective hosting platforms:
 
-## Build Checks
+| Variable | Used By | Purpose |
+|---|---|---|
+| `MONGODB_URI` | Backend | MongoDB connection string |
+| `PORT` | Backend | Port supplied by the hosting platform or local environment |
+| `VITE_API_URL` | Frontend | Base URL of the backend API |
 
-Frontend production build:
+For the deployed frontend, `VITE_API_URL` should point to:
 
-```bash
-cd frontend
-npm run build
+```text
+https://user-analytics-dashboard-4xv1.onrender.com/api
 ```
 
-Backend TypeScript build:
+Do not expose database credentials or other secrets in frontend environment variables.
+
+## Build and Validation
+
+Build the backend:
 
 ```bash
 cd backend
 npm run build
 ```
 
-## Security Notes
+Build the frontend:
 
-- Store MongoDB credentials in environment variables.
-- Never commit `.env` files or database secrets.
-- Configure MongoDB Atlas network access appropriately for your deployment.
-- Review CORS settings before exposing the application publicly.
+```bash
+cd frontend
+npm run build
+```
+
+The production frontend build may display a bundle-size warning. This does not necessarily indicate a failed build.
 
 ## Future Improvements
 
-- Optimize frontend bundle size through code splitting.
-- Add automated end-to-end tests.
-- Improve heatmap aggregation and coordinate accuracy.
-- Deploy the frontend and backend to production hosting.
+- Date-range filters and historical analytics
+- Device and browser breakdowns
+- Conversion and funnel tracking
+- Exportable analytics reports
+- More efficient event aggregation
+- Automated testing and monitoring
 
-## License
+## Author
 
-No license has been specified yet.
+**Ambreesh**
+
+- GitHub: [@Ambreesh1](https://github.com/Ambreesh1)
+
+---
+
+If you find this project useful, consider giving the repository a star!
