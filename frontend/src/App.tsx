@@ -138,12 +138,14 @@ function App() {
   const [heatmapClicks, setHeatmapClicks] = useState<HeatmapClick[]>([])
   const [heatmapLoading, setHeatmapLoading] = useState(false)
   const [heatmapError, setHeatmapError] = useState('')
-  const heatmapPreviewUrls: Record<string, string> = {
-  "/": "http://localhost:5500/",
-  "/index.html": "http://localhost:5500/index.html",
-  "/product.html": "http://localhost:5500/product.html",
-  "/about.html": "http://localhost:5500/about.html",
-}
+  
+const heatmapPreviewUrls: Record<string, string> = {
+  "/": "https://user-analytics-demo.onrender.com/",
+  "/index.html": "https://user-analytics-demo.onrender.com/index.html",
+  "/product.html": "https://user-analytics-demo.onrender.com/product.html",
+  "/about.html": "https://user-analytics-demo.onrender.com/about.html",
+};
+
 
 const heatmapPages = useMemo(
   () =>
