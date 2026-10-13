@@ -63,7 +63,7 @@ The application is deployed with Vercel, Render, and MongoDB Atlas.
 
 ## Architecture
 
-```mermaid
+mermaid
 flowchart TD
     A[Visitor] --> B[Demo Website]
     B --> C[JavaScript Tracking Script]
@@ -72,7 +72,7 @@ flowchart TD
     E --> F[Analytics API Endpoints]
     F --> G[React Dashboard]
     G --> H[Charts and Click Heatmap]
-```
+
 
 ## How It Works
 
