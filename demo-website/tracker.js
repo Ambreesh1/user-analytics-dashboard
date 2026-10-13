@@ -1,5 +1,5 @@
 (() => {
-  const API_URL = "http://localhost:4000/api/events";
+  const API_URL = "https://user-analytics-dashboard-4xv1.onrender.com/api/events";
   const STORAGE_KEY = "demo_analytics_session_id";
 
   let sessionId = sessionStorage.getItem(STORAGE_KEY);
