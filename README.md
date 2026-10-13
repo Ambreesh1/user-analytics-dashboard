@@ -5,7 +5,7 @@ A full-stack web analytics platform that tracks visitor sessions, page views, an
 **Live Demo:** [Analytics Dashboard](https://user-analytics-dashboard-bice.vercel.app/) · [Tracked Demo Website](https://user-analytics-demo.onrender.com/) · [Backend API Health](https://user-analytics-dashboard-4xv1.onrender.com/api/health)
 
 ---
-
+> **Note on availability:** The backend is hosted on Render's free tier. After a period of inactivity, the service may spin down, so the first request can take longer while the service starts up. Subsequent requests should be faster once the service is active.
 ## Overview
 
 User Analytics Dashboard helps website owners understand how visitors interact with their pages. A lightweight tracking script collects page views and click coordinates from a demo website, the backend stores events in MongoDB, and the dashboard visualizes the collected activity.
